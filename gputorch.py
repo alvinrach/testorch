@@ -1,39 +1,53 @@
 import torch
 import torch.nn as nn
-
-# Check if GPU is available
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f'Using device: {device}')
+import torch.optim as optim
+import time
 
 # Define a simple neural network
-class SimpleNN(nn.Module):
+class SimpleNet(nn.Module):
     def __init__(self):
-        super(SimpleNN, self).__init__()
-        self.layer1 = nn.Linear(100, 200)
-        self.layer2 = nn.Linear(200, 500)
-        self.layer3 = nn.Linear(500, 1)
+        super(SimpleNet, self).__init__()
+        self.fc1 = nn.Linear(200000, 500)
+        self.fc2 = nn.Linear(500, 500)
+        self.fc3 = nn.Linear(500, 500)
+        self.fc4 = nn.Linear(500, 10)
+        self.relu = nn.ReLU()
 
     def forward(self, x):
-        x = torch.relu(self.layer1(x))
-        x = self.layer2(x)
-        x = self.layer3(x)
+        x = self.relu(self.fc1(x))
+        x = self.fc2(x)
+        x = self.fc3(x)
+        x = self.fc4(x)
         return x
 
-# Create an instance of the neural network and move it to the GPU
-print(f'Are u sure calculate using {device}?')
-maualat = input('Yes/No:')
-if maualat=='Yes':
-    pass
-elif maualat=='No':
-    device = input('cuda/cpu:')
+# Create random input data and labels
+input_data = torch.randn(8092, 200000)
+labels = torch.randint(0, 10, (8092,))
 
-model = SimpleNN().to(device)
+# Define the device to use (CPU or GPU)
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = 'cuda'
 
-# Create some dummy input data and move it to the GPU
-input_data = torch.randn(1, 100).to(device)
-print(input_data)
+# Instantiate the model and move it to the device
+model = SimpleNet().to(device)
+input_data = input_data.to(device)
+labels = labels.to(device)
 
-# Perform a forward pass
-output = model(input_data)
+# Define loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(model.parameters(), lr=0.01)
 
-print('Output:', output)
+# Training loop
+start_time = time.time()
+for epoch in range(10):
+    optimizer.zero_grad()
+    outputs = model(input_data)
+    loss = criterion(outputs, labels)
+    loss.backward()
+    optimizer.step()
+
+end_time = time.time()
+
+# Calculate the time taken
+elapsed_time = end_time - start_time
+print(f"Time taken for training on {device}: {elapsed_time} seconds")
